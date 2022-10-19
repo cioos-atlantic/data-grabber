@@ -28,16 +28,16 @@ class MonthlyState:
         curr_year = start.year
         for n in datelist:
             source = self.grabber.url + \
-              "/" + str(n.year) + "/" + str(n.month) + "/" + str(n.day) + "/" +\
+              "/" + str(n.year) + "/" + str(n.month) + "/" +\
               self.grabber.filename
             destination = self.grabber.home + \
-              "/" + str(n.year) + "/" + str(n.month) + "/" + str(n.day) + "/" + \
+              "/" + str(n.year) + "/" + str(n.month) + "/" + \
               self.grabber.filename
             if n.year > curr_year:
                 self.grabber.createDir(grabber.home + str(n.year))
                 curr_year = n.year
-
-
+            self.grabber.createDir(grabber.home + str(n.year) + "/" + str(n.month))
+            self.grabber.getData(source, destination)
 
 class DailyState:
     grabber = None
@@ -85,7 +85,26 @@ class YearlyState:
         grabber = grabber
 
     def build(self):
-        pass
+        if self.grabber == None:
+            raise Exception("No grabber called for state class")
+        end = self.grabber.endtime
+        start = self.grabber.starttime
+        datelist = (start + datetime.timedelta(days=x) for x in range(0, (end-start).days))
+        try:
+            self.grabber.createDir(str(start.year))
+        except FileExistsError as fe:
+            logging.warning(f"Directory for {str(start.year)} already exists")
+            logging.warning(f"Via error: fe")
+        curr_year = start.year
+        for n in datelist:
+            source = self.grabber.url + \
+              "/" + str(n.year) + "/" +\
+              self.grabber.filename
+            destination = self.grabber.home + \
+              "/" + str(n.year) + "/" + \
+              self.grabber.filename
+            self.grabber.createDir(grabber.home + str(n.year) + "/" + str(n.month))
+            self.grabber.getData(source, destination)
 
 
 class DataGrabber:
@@ -144,7 +163,9 @@ if __name__ == "__main__":
     interval = input()
     print("What filename does the api use?")
     fn = input()
-    grabber = DataGrabber(url, start, end, fn)
+    print("What path would you like the data to go?")
+    path = input()
+    grabber = DataGrabber(url, start, end, fn, home=path)
     grabber.build()
     
 
